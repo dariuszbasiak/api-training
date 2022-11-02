@@ -50,7 +50,7 @@ export async function creatExerciseForUser(req, res) {
 
   if (result) {
     res.status(201).json({
-      userId: +req.params._id,
+      _id: +req.params._id,
       exerciseId: result.lastID,
       duration: +userData.duration,
       date: userData.date,

@@ -9,9 +9,18 @@ import {sendDatabaseError} from '../../utlis.js';
  */
 export async function createUser(req, res) {
   let results;
+  const username = req.body?.username;
+  if (!username) {
+    res.status(400).json({
+      errors: [{
+        value: 'No user name',
+        type: 'Request'
+      }]
+    })
+  }
   try {
     results = await db.run(`INSERT INTO users (username) VALUES(?)`, [
-      req.body?.username,
+      username,
     ]);
   } catch (error) {
     sendDatabaseError(res, error);
@@ -19,7 +28,7 @@ export async function createUser(req, res) {
   }
 
   if (results) {
-    res.status(201).send();
+    res.status(201).json({_id: results.lastID, username});
     return;
   }
 
@@ -45,7 +54,7 @@ export async function getUserById(req, res) {
   }
 
   if (result) {
-    res.json(result);
+    res.json(result.map(({username, id}) => ({username, _id: id})));
     return;
   }
   res.status(404).send({
@@ -114,8 +123,8 @@ export async function getUsersLogs(req, res) {
 
   let rows;
   try {
-    const sqlQuery = `SELECT * FROM exercise WHERE userId = ? ${whereQuery}  ${addQuery}`;
-    console.log([userId, ...sqlParams, ...limit]);
+    const sqlQuery = `SELECT * FROM exercise INNER JOIN users ON users.id = ? ${whereQuery}  ${addQuery}`;
+    console.log(sqlQuery, [userId, ...sqlParams, ...limit])
     rows = await db.all(sqlQuery, [userId, ...sqlParams, ...limit]);
   } catch (error) {
     sendDatabaseError(res, error);
@@ -130,10 +139,14 @@ export async function getUsersLogs(req, res) {
     sendDatabaseError(res, error);
   }
 
+  console.log(rows)
   if (rows?.length) {
+    const username = rows[0].username;
     res.json({
-      logs: rows,
-      count: matchingCount[0] ? matchingCount[0]['COUNT(*)'] : null,
+      username,
+      _id: +userId,
+      log: rows.map(log => ({duration: log.duration, description: log.description, date: new Date(log.date).toDateString()})),
+      count: matchingCount && matchingCount[0] ? matchingCount[0]['COUNT(*)'] : null,
     });
 
     return;
