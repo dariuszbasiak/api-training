@@ -1,6 +1,12 @@
 import db from '../../db/index.js';
 import {sendDatabaseError} from '../../utlis.js';
 
+function _getFormattedDate(date) {
+  const regex = /^\d{4}\-(0?[1-9]|1[012])\-(0?[1-9]|[12][0-9]|3[01])$/;
+  const newDate = regex.test(date) ? date : new Date().toISOString().split('T')[0];
+  return newDate;
+}
+
 /**
  * Create an exercise for the user
  * @param {Request} req
@@ -49,9 +55,7 @@ export async function creatExerciseForUser(req, res) {
      res.status(404).send();
      return
    }
-
-  const regex = /^\d{4}-\d{2}-\d{2}$/;
-  const date = regex.test(userData.date) ? userData.date : new Date().toISOString().split('T')[0];
+  const date = _getFormattedDate(userData.date);
 
   try {
     result = await db.run(
