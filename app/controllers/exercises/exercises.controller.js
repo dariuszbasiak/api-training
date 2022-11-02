@@ -37,8 +37,18 @@ export async function creatExerciseForUser(req, res) {
     return;
   }
 
+  let user;
   let result;
 
+  try {
+    user = await db.all('SELECT * FROM users WHERE id = ?',  [req.params._id])
+  } catch (e) {
+    sendDatabaseError(res,e)
+  }
+   if (!user) {
+     res.status(404).send();
+     return
+   }
   try {
     result = await db.run(
         'INSERT INTO exercise(userId, duration, description, date) VALUES(?, ?, ?, ?)',
@@ -51,9 +61,9 @@ export async function creatExerciseForUser(req, res) {
   if (result) {
     res.status(201).json({
       _id: +req.params._id,
-      exerciseId: result.lastID,
+      username: user[0].username,
       duration: +userData.duration,
-      date: userData.date,
+      date: userData.date ? new Date(userData.date).toDateString(): '',
       description: userData.description,
     });
     return;

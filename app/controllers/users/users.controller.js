@@ -80,7 +80,7 @@ export async function getAllUsers(req, res) {
   }
 
   if (result?.length) {
-    res.json(result);
+    res.json(result.map(({id, username}) => ({_id: id, username})));
     return;
   }
 
