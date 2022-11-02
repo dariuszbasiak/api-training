@@ -49,10 +49,14 @@ export async function creatExerciseForUser(req, res) {
      res.status(404).send();
      return
    }
+
+  const regex = /^\d{4}-\d{2}-\d{2}$/;
+  const date = regex.test(userData.date) ? userData.date : new Date().toISOString().split('T')[0];
+
   try {
     result = await db.run(
         'INSERT INTO exercise(userId, duration, description, date) VALUES(?, ?, ?, ?)',
-        [req.params._id, userData.duration, userData.description, userData.date],
+        [req.params._id, userData.duration, userData.description, date ],
     );
   } catch (error) {
     sendDatabaseError(res, error);
@@ -60,10 +64,10 @@ export async function creatExerciseForUser(req, res) {
 
   if (result) {
     res.status(201).json({
-      _id: +req.params._id,
+      _id: req.params._id,
       username: user[0].username,
       duration: +userData.duration,
-      date: userData.date ? new Date(userData.date).toDateString(): '',
+      date,
       description: userData.description,
     });
     return;

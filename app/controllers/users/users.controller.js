@@ -144,7 +144,7 @@ export async function getUsersLogs(req, res) {
     const username = rows[0].username;
     res.json({
       username,
-      _id: +userId,
+      _id: userId,
       log: rows.map(log => ({duration: log.duration, description: log.description, date: new Date(log.date).toDateString()})),
       count: matchingCount && matchingCount[0] ? matchingCount[0]['COUNT(*)'] : null,
     });
