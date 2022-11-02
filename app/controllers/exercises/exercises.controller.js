@@ -71,7 +71,7 @@ export async function creatExerciseForUser(req, res) {
       _id: req.params._id,
       username: user[0].username,
       duration: +userData.duration,
-      date,
+      date: new Date(date).toDateString(),
       description: userData.description,
     });
     return;
