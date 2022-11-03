@@ -7,12 +7,21 @@ import { sendDatabaseError } from '../../utlis.js'
  * @returns {*|string}
  * @private
  */
-function _getFormattedDate(date) {
-    const regex = /^\d{4}\-(0?[1-9]|1[012])\-(0?[1-9]|[12][0-9]|3[01])$/
-    const newDate = regex.test(date)
+export function getFormattedDate(date) {
+    const newDate = isDateFormatValid(date)
         ? date
         : new Date().toISOString().split('T')[0]
     return newDate
+}
+
+/**
+ * Checking if date format is valid
+ * @param {string} date
+ * @returns {boolean}
+ */
+export function isDateFormatValid(date) {
+    const regex = /^\d{4}\-(0?[1-9]|1[012])\-(0?[1-9]|[12][0-9]|3[01])$/
+    return regex.test(date)
 }
 
 /**
@@ -65,13 +74,13 @@ export async function creatExerciseForUser(req, res) {
         return
     }
 
-    const date = _getFormattedDate(userData.date)
+    const date = getFormattedDate(userData.date)
     let result
 
     try {
         result = await db.run(
             'INSERT INTO exercise(userId, duration, description, date) VALUES(?, ?, ?, ?)',
-            [req.params._id, userData.duration, userData.description]
+            [req.params._id, userData.duration, userData.description, date]
         )
     } catch (error) {
         sendDatabaseError(res, error)
