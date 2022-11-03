@@ -61,7 +61,7 @@ export async function creatExerciseForUser(req, res) {
   try {
     result = await db.run(
         'INSERT INTO exercise(userId, duration, description, date) VALUES(?, ?, ?, ?)',
-        [req.params._id, userData.duration, userData.description ],
+        [req.params._id, userData.duration, userData.description],
     );
   } catch (error) {
     sendDatabaseError(res, error);
