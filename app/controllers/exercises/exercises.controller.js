@@ -16,7 +16,7 @@ function _getFormattedDate(date) {
 export async function creatExerciseForUser(req, res) {
   const userData = req.body;
   const errors = [];
-  console.log('userData', userData)
+
   if (!userData.description) {
     errors.push({
       type: 'Request',
@@ -55,13 +55,13 @@ export async function creatExerciseForUser(req, res) {
      res.status(404).send();
      return
    }
-  const date = _getFormattedDate(userData.date);
 
-   console.log('getFormattedDate', date, new Date(date).toDateString())
+   const date = _getFormattedDate(userData.date);
+
   try {
     result = await db.run(
         'INSERT INTO exercise(userId, duration, description, date) VALUES(?, ?, ?, ?)',
-        [req.params._id, userData.duration, userData.description + ' ' + userData.date, date ],
+        [req.params._id, userData.duration, userData.description ],
     );
   } catch (error) {
     sendDatabaseError(res, error);

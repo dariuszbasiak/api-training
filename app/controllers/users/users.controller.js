@@ -54,7 +54,7 @@ export async function getUserById(req, res) {
   }
 
   if (result) {
-    res.json(result.map(({username, id}) => ({username, _id: id})));
+    res.json(result.map(({username, id}) => ({username, _id: id +''})));
     return;
   }
   res.status(404).send({
