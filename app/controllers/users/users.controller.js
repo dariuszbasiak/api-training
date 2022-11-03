@@ -1,5 +1,5 @@
-import db from '../../db/index.js';
-import {sendDatabaseError} from '../../utlis.js';
+import db from '../../db/index.js'
+import { sendDatabaseError } from '../../utlis.js'
 
 /**
  * Creating user
@@ -8,31 +8,33 @@ import {sendDatabaseError} from '../../utlis.js';
  * @return {Promise<void>}
  */
 export async function createUser(req, res) {
-  let results;
-  const username = req.body?.username;
-  if (!username) {
-    res.status(400).json({
-      errors: [{
-        value: 'No user name',
-        type: 'Request'
-      }]
-    })
-  }
-  try {
-    results = await db.run(`INSERT INTO users (username) VALUES(?)`, [
-      username,
-    ]);
-  } catch (error) {
-    sendDatabaseError(res, error);
-    return;
-  }
+    let results
+    const username = req.body?.username
+    if (!username) {
+        res.status(400).json({
+            errors: [
+                {
+                    value: 'No user name',
+                    type: 'Request',
+                },
+            ],
+        })
+    }
+    try {
+        results = await db.run(`INSERT INTO users (username) VALUES(?)`, [
+            username,
+        ])
+    } catch (error) {
+        sendDatabaseError(res, error)
+        return
+    }
 
-  if (results) {
-    res.status(201).json({_id: results.lastID, username});
-    return;
-  }
+    if (results) {
+        res.status(201).json({ _id: results.lastID, username })
+        return
+    }
 
-  res.status(500).send();
+    res.status(500).send()
 }
 
 /**
@@ -42,25 +44,25 @@ export async function createUser(req, res) {
  * @return {Promise<void>}
  */
 export async function getUserById(req, res) {
-  const id = req.params?._id;
+    const id = req.params?._id
 
-  let result;
+    let result
 
-  try {
-    result = await db.all('SELECT * FROM users WHERE id = ?', [+id]);
-  } catch (error) {
-    sendDatabaseError(res, error);
-    return;
-  }
+    try {
+        result = await db.all('SELECT * FROM users WHERE id = ?', [+id])
+    } catch (error) {
+        sendDatabaseError(res, error)
+        return
+    }
 
-  if (result) {
-    res.json(result.map(({username, id}) => ({username, _id: id +''})));
-    return;
-  }
-  res.status(404).send({
-    errors: [{type: 'No data'}],
-  });
-  return;
+    if (result) {
+        res.json(result.map(({ username, id }) => ({ username, _id: id + '' })))
+        return
+    }
+    res.status(404).send({
+        errors: [{ type: 'No data' }],
+    })
+    return
 }
 
 /**
@@ -70,21 +72,23 @@ export async function getUserById(req, res) {
  * @return {Promise<void>}
  */
 export async function getAllUsers(req, res) {
-  let result;
+    let result
 
-  try {
-    result = await db.all('SELECT * FROM users');
-  } catch (error) {
-    sendDatabaseError(res, error);
-    return;
-  }
+    try {
+        console.log('users')
+        result = await db.all('SELECT * FROM users')
+    } catch (error) {
+        sendDatabaseError(res, error)
+        return
+    }
 
-  if (result?.length) {
-    res.json(result.map(({id, username}) => ({_id: id + '', username,})));
-    return;
-  }
+    console.log(result)
+    if (result?.length) {
+        res.json(result.map(({ id, username }) => ({ _id: id + '', username })))
+        return
+    }
 
-  res.status(404);
+    res.json([])
 }
 
 /**
@@ -94,75 +98,85 @@ export async function getAllUsers(req, res) {
  * @return {Promise<void>}
  */
 export async function getUsersLogs(req, res) {
-  const userId = req.params._id;
-  const queryParams = req.query;
+    const userId = req.params._id
+    const queryParams = req.query
 
-  let addQuery = '';
-  const limit = [];
-  const sqlParams = [];
-  let whereQuery = '';
-  if (queryParams.limit && +queryParams.limit > -1) {
-    addQuery += ' LIMIT ?';
-    limit.push(+queryParams.limit);
-  }
+    let addQuery = ''
+    const limit = []
+    const sqlParams = []
+    let whereQuery = ''
+    if (queryParams.limit && +queryParams.limit > -1) {
+        addQuery += ' LIMIT ?'
+        limit.push(+queryParams.limit)
+    }
 
-  if (queryParams.from) {
-    whereQuery += ' AND date >= ?';
-    sqlParams.push(queryParams.from);
-  }
+    if (queryParams.from) {
+        whereQuery += ' AND date >= ?'
+        sqlParams.push(queryParams.from)
+    }
 
-  if (queryParams.to) {
-    whereQuery += ' AND date <= ?';
-    sqlParams.push(queryParams.to);
-  }
-  if (!userId) {
-    res
-        .status(400)
-        .json({errors: [{value: 'No user id', type: 'Request'}]});
-  }
+    if (queryParams.to) {
+        whereQuery += ' AND date <= ?'
+        sqlParams.push(queryParams.to)
+    }
+    if (!userId) {
+        res.status(400).json({
+            errors: [{ value: 'No user id', type: 'Request' }],
+        })
+    }
 
-  let user;
-  let result;
+    let user
 
-  try {
-    user = await db.all('SELECT * FROM users WHERE id = ?',  [req.params._id])
-  } catch (e) {
-    sendDatabaseError(res,e)
-  }
-  if (!user[0]) {
-    res.status(404).send({errors: [{value: "User not found", type: "Request"}]});
-    return
-  }
+    try {
+        user = await db.all('SELECT * FROM users WHERE id = ?', [
+            req.params._id,
+        ])
+    } catch (e) {
+        sendDatabaseError(res, e)
+    }
+    if (!user[0]) {
+        res.status(404).send({
+            errors: [{ value: 'User not found', type: 'Request' }],
+        })
+        return
+    }
 
-  let rows;
-  try {
-    const sqlQuery = `SELECT description, duration, date FROM exercise WHERE userId = ? ${whereQuery}  ${addQuery}`;
-    console.log(sqlQuery, [userId, ...sqlParams, ...limit])
-    rows = await db.all(sqlQuery, [userId, ...sqlParams, ...limit]);
-  } catch (error) {
-    sendDatabaseError(res, error);
-  }
+    let rows
 
-  let matchingCount;
+    try {
+        const sqlQuery = `SELECT description, duration, date FROM exercise WHERE userId = ? ${whereQuery}  ${addQuery}`
+        rows = await db.all(sqlQuery, [userId, ...sqlParams, ...limit])
+    } catch (error) {
+        sendDatabaseError(res, error)
+    }
 
-  try {
-    const sqlQuery = `SELECT COUNT(*) FROM exercise WHERE userId = ? ${whereQuery}`;
-    matchingCount = await db.all(sqlQuery, [userId, ...sqlParams]);
-  } catch (error) {
-    sendDatabaseError(res, error);
-  }
+    let matchingCount
 
-  if (rows?.length) {
-    const username = user[0].username;
-    res.json({
-      username,
-      _id: userId,
-      log: rows.map(log => ({duration: log.duration, description: log.description, date: new Date(log.date).toDateString()})),
-      count: matchingCount && matchingCount[0] ? matchingCount[0]['COUNT(*)'] : null,
-    });
+    try {
+        const sqlQuery = `SELECT COUNT(*) FROM exercise WHERE userId = ? ${whereQuery}`
+        matchingCount = await db.all(sqlQuery, [userId, ...sqlParams])
+    } catch (error) {
+        sendDatabaseError(res, error)
+    }
 
-    return;
-  }
+    if (rows?.length) {
+        const username = user[0].username
+        res.json({
+            username,
+            _id: userId,
+            log: rows.map((log) => ({
+                duration: log.duration,
+                description: log.description,
+                date: new Date(log.date).toDateString(),
+            })),
+            count:
+                matchingCount && matchingCount[0]
+                    ? matchingCount[0]['COUNT(*)']
+                    : null,
+        })
 
-  res.status(404).send();
+        return
+    }
+
+    res.status(404).send()
 }
