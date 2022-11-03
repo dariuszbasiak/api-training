@@ -139,7 +139,7 @@ export async function getUsersLogs(req, res) {
     sendDatabaseError(res, error);
   }
 
-  console.log(rows)
+  console.log(rows.map(log => { console.log(log.date, new Date(log.date).toDateString())}))
   if (rows?.length) {
     const username = rows[0].username;
     res.json({
