@@ -121,9 +121,22 @@ export async function getUsersLogs(req, res) {
         .json({errors: [{value: 'No user id', type: 'Request'}]});
   }
 
+  let user;
+  let result;
+
+  try {
+    user = await db.all('SELECT * FROM users WHERE id = ?',  [req.params._id])
+  } catch (e) {
+    sendDatabaseError(res,e)
+  }
+  if (!user[0]) {
+    res.status(404).send({errors: [{value: "User not found", type: "Request"}]});
+    return
+  }
+
   let rows;
   try {
-    const sqlQuery = `SELECT * FROM exercise INNER JOIN users ON users.id = ? ${whereQuery}  ${addQuery}`;
+    const sqlQuery = `SELECT description, duration, date FROM exercise WHERE userId = ? ${whereQuery}  ${addQuery}`;
     console.log(sqlQuery, [userId, ...sqlParams, ...limit])
     rows = await db.all(sqlQuery, [userId, ...sqlParams, ...limit]);
   } catch (error) {
@@ -140,7 +153,7 @@ export async function getUsersLogs(req, res) {
   }
 
   if (rows?.length) {
-    const username = rows[0].username;
+    const username = user[0].username;
     res.json({
       username,
       _id: userId,
