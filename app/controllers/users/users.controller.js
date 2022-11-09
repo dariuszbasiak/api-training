@@ -19,7 +19,29 @@ export async function createUser(req, res) {
                 },
             ],
         })
+
+        return
     }
+    let existingUserName
+    try {
+        existingUserName = await db.all(
+            'SELECT * FROM users WHERE username == ?',
+            [username]
+        )
+    } catch (e) {
+        sendDatabaseError(res, e)
+    }
+
+    if (existingUserName?.length) {
+        res.status(400).json({
+            errors: [
+                { value: 'users with this name already exist', type: 'Data' },
+            ],
+        })
+
+        return
+    }
+
     try {
         results = await db.run(`INSERT INTO users (username) VALUES(?)`, [
             username,
@@ -75,14 +97,12 @@ export async function getAllUsers(req, res) {
     let result
 
     try {
-        console.log('users')
         result = await db.all('SELECT * FROM users')
     } catch (error) {
         sendDatabaseError(res, error)
         return
     }
 
-    console.log(result)
     if (result?.length) {
         res.json(result.map(({ id, username }) => ({ _id: id + '', username })))
         return
@@ -144,7 +164,7 @@ export async function getUsersLogs(req, res) {
     let rows
 
     try {
-        const sqlQuery = `SELECT description, duration, date FROM exercise WHERE userId = ? ${whereQuery}  ${addQuery}`
+        const sqlQuery = `SELECT description, duration, date FROM exercise  WHERE userId = ? ${whereQuery} ORDER BY date ASC  ${addQuery}`
         rows = await db.all(sqlQuery, [userId, ...sqlParams, ...limit])
     } catch (error) {
         sendDatabaseError(res, error)

@@ -68,6 +68,7 @@ export async function creatExerciseForUser(req, res) {
         ])
     } catch (e) {
         sendDatabaseError(res, e)
+        return
     }
     if (!user[0]) {
         res.status(404).send()
@@ -84,6 +85,7 @@ export async function creatExerciseForUser(req, res) {
         )
     } catch (error) {
         sendDatabaseError(res, error)
+        return
     }
 
     if (result) {
